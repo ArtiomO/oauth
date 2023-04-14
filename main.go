@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/ArtiomO/dndback/auth"
-	"github.com/ArtiomO/dndback/db"
+	"github.com/ArtiomO/oauth/auth"
+	"github.com/ArtiomO/oauth/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"math/rand"
@@ -91,7 +91,7 @@ func main() {
 		if responseType == "token" {
 			token := auth.GenerateJWT(
 				auth.Header{Alg: "SHA256", Typ: "JWT"},
-				auth.Payload{Username: "SHA256", Exp: 123123123},
+				auth.Payload{Username: "test_user", Exp: 123123123},
 				"test",
 			)
 			token = url.QueryEscape(token)
@@ -143,5 +143,5 @@ func main() {
 
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	err := r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

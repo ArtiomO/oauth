@@ -1,4 +1,4 @@
-module github.com/ArtiomO/dndback
+module github.com/ArtiomO/oauth
 
 go 1.20
 
