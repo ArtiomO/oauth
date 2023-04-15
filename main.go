@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"strconv"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -24,21 +23,7 @@ func randStringRunes(n int) string {
 
 func main() {
 
-	var charsStorage = db.Characters{
-		List: []db.Character{},
-	}
-
 	requestsContext := db.Requests{}
-	charsStorage.Add(db.Character{
-		Id:  1,
-		Int: 11,
-		Cha: 11,
-		Str: 11,
-		Wis: 11,
-		Dex: 11,
-		Con: 11,
-	})
-
 	clients := []db.Client{{
 		ClientId:     "test-client-id",
 		ClientSecret: "test-client-secret",
@@ -50,35 +35,12 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	r.Use(cors.New(config))
-	r.GET("/character/:id", func(c *gin.Context) {
-		idStr := c.Param("id")
-		id, _ := strconv.Atoi(idStr)
-
-		char, err := db.FilterId(charsStorage.List, id)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusOK, char)
-	})
-
-	r.POST("/character", func(c *gin.Context) {
-		var newCharacter db.Character
-		if err := c.BindJSON(&newCharacter); err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-			return
-		}
-		charsStorage.Add(newCharacter)
-		c.IndentedJSON(http.StatusCreated, newCharacter)
-	})
 
 	r.GET("/authorize", func(c *gin.Context) {
 		responseType := c.Query("response_type")
 		clientId := c.Query("client_id")
 		redirectUri := c.Query("redirect_uri")
 		client, err := db.GetClient(clients, clientId)
-
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
