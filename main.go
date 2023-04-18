@@ -6,6 +6,7 @@ import (
 	"github.com/ArtiomO/oauth/db"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -36,7 +37,7 @@ func main() {
 	config.AllowAllOrigins = true
 	r.Use(cors.New(config))
 
-	r.GET("/authorize", func(c *gin.Context) {
+	r.GET("/api/v1/authorize", func(c *gin.Context) {
 		responseType := c.Query("response_type")
 		clientId := c.Query("client_id")
 		redirectUri := c.Query("redirect_uri")
@@ -63,7 +64,7 @@ func main() {
 		}
 
 	})
-	r.GET("/login", func(c *gin.Context) {
+	r.GET("/api/v1/login", func(c *gin.Context) {
 
 		reqId := randStringRunes(10)
 		clientId, _ := url.QueryUnescape(c.Query("client_id"))
@@ -81,7 +82,7 @@ func main() {
 		return
 	})
 
-	r.POST("/login", func(c *gin.Context) {
+	r.POST("/api/v1/login", func(c *gin.Context) {
 
 		login := c.PostForm("login")
 		password := c.PostForm("password")
@@ -90,7 +91,7 @@ func main() {
 		clientent := requestsContext[requestId]
 
 		if login == "vasya" || password == "123" {
-			redirectUri := fmt.Sprintf("http://localhost:8080/authorize?client_id=%s&response_type=token&redirect_uri=%s",
+			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=token&redirect_uri=%s",
 				url.QueryEscape(clientent.ClientId),
 				url.QueryEscape(clientent.RedirectURI),
 			)
@@ -105,5 +106,7 @@ func main() {
 
 	})
 
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	if err := r.Run(":8090"); err != nil {
+		log.Printf("Error: %v", err)
+	}
 }
