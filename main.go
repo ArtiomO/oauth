@@ -31,6 +31,8 @@ func main() {
 		RedirectURI:  "http://localhost:3000/oauthcallback",
 	}}
 
+	var codes db.Codes
+
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
 	config := cors.DefaultConfig()
@@ -63,6 +65,19 @@ func main() {
 			return
 		}
 
+		if responseType == "code" {
+
+			state := c.Query("state")
+			code := randStringRunes(8)
+			codes[code] = db.CodeClient{
+				ClientId: clientId,
+			}
+			code = url.QueryEscape(code)
+			redirect := fmt.Sprintf("http://localhost:3000/oauthcallback#code=%s&state=%s", code, state)
+			c.Redirect(http.StatusFound, redirect)
+			return
+		}
+
 	})
 	r.GET("/api/v1/login", func(c *gin.Context) {
 
@@ -91,7 +106,31 @@ func main() {
 		clientent := requestsContext[requestId]
 
 		if login == "vasya" || password == "123" {
-			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=token&redirect_uri=%s",
+			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=code&redirect_uri=%s",
+				url.QueryEscape(clientent.ClientId),
+				url.QueryEscape(clientent.RedirectURI),
+			)
+			fmt.Println(redirectUri)
+			c.Redirect(http.StatusFound, redirectUri)
+			return
+		} else {
+
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid creds."})
+			return
+		}
+
+	})
+
+	r.POST("/api/v1/token", func(c *gin.Context) {
+
+		login := c.PostForm("login")
+		password := c.PostForm("password")
+		requestId := c.PostForm("reqid")
+
+		clientent := requestsContext[requestId]
+
+		if login == "vasya" || password == "123" {
+			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=code&redirect_uri=%s",
 				url.QueryEscape(clientent.ClientId),
 				url.QueryEscape(clientent.RedirectURI),
 			)
