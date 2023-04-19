@@ -28,10 +28,10 @@ func main() {
 	clients := []db.Client{{
 		ClientId:     "test-client-id",
 		ClientSecret: "test-client-secret",
-		RedirectURI:  "http://localhost:3000/oauthcallback",
+		RedirectURI:  "http://localhost:3000/api/oauthcallback",
 	}}
 
-	var codes db.Codes
+	codes := db.Codes{}
 
 	r := gin.Default()
 	r.LoadHTMLGlob("templates/*")
@@ -60,20 +60,19 @@ func main() {
 				"test",
 			)
 			token = url.QueryEscape(token)
-			redirect := fmt.Sprintf("http://localhost:3000/oauthcallback#access_token=%s&token_type=Bearer", token)
+			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback#access_token=%s&token_type=Bearer", token)
 			c.Redirect(http.StatusFound, redirect)
 			return
 		}
 
 		if responseType == "code" {
-
 			state := c.Query("state")
 			code := randStringRunes(8)
 			codes[code] = db.CodeClient{
 				ClientId: clientId,
 			}
 			code = url.QueryEscape(code)
-			redirect := fmt.Sprintf("http://localhost:3000/oauthcallback#code=%s&state=%s", code, state)
+			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback#code=%s&state=%s", code, state)
 			c.Redirect(http.StatusFound, redirect)
 			return
 		}
