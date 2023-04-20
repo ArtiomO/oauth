@@ -22,6 +22,12 @@ func randStringRunes(n int) string {
 	return string(b)
 }
 
+type TokenIn struct {
+	Code        string `json:"code"`
+	GrantType   string `json:"grant_type"`
+	RedirectUri string `json:"redirect_uri"`
+}
+
 func main() {
 
 	requestsContext := db.Requests{}
@@ -53,18 +59,6 @@ func main() {
 			return
 		}
 
-		if responseType == "token" {
-			token := auth.GenerateJWT(
-				auth.Header{Alg: "SHA256", Typ: "JWT"},
-				auth.Payload{Username: "test_user", Exp: 123123123},
-				"test",
-			)
-			token = url.QueryEscape(token)
-			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback#access_token=%s&token_type=Bearer", token)
-			c.Redirect(http.StatusFound, redirect)
-			return
-		}
-
 		if responseType == "code" {
 			state := c.Query("state")
 			code := randStringRunes(8)
@@ -72,7 +66,7 @@ func main() {
 				ClientId: clientId,
 			}
 			code = url.QueryEscape(code)
-			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback#code=%s&state=%s", code, state)
+			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback?code=%s&state=%s", code, state)
 			c.Redirect(http.StatusFound, redirect)
 			return
 		}
@@ -83,10 +77,12 @@ func main() {
 		reqId := randStringRunes(10)
 		clientId, _ := url.QueryUnescape(c.Query("client_id"))
 		redirectUri, _ := url.QueryUnescape(c.Query("redirect_uri"))
+		state, _ := url.QueryUnescape(c.Query("state"))
 
 		requestsContext[reqId] = db.Client{
 			ClientId:    clientId,
 			RedirectURI: redirectUri,
+			State:       state,
 		}
 
 		fmt.Println(reqId)
@@ -105,9 +101,10 @@ func main() {
 		clientent := requestsContext[requestId]
 
 		if login == "vasya" || password == "123" {
-			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=code&redirect_uri=%s",
+			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=code&redirect_uri=%s&state=%s",
 				url.QueryEscape(clientent.ClientId),
 				url.QueryEscape(clientent.RedirectURI),
+				url.QueryEscape(clientent.State),
 			)
 			fmt.Println(redirectUri)
 			c.Redirect(http.StatusFound, redirectUri)
@@ -122,23 +119,49 @@ func main() {
 
 	r.POST("/api/v1/token", func(c *gin.Context) {
 
-		login := c.PostForm("login")
-		password := c.PostForm("password")
-		requestId := c.PostForm("reqid")
+		var token TokenIn
 
-		clientent := requestsContext[requestId]
+		if c.ShouldBind(&token) != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request."})
+			return
+		}
 
-		if login == "vasya" || password == "123" {
-			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=code&redirect_uri=%s",
-				url.QueryEscape(clientent.ClientId),
-				url.QueryEscape(clientent.RedirectURI),
-			)
-			fmt.Println(redirectUri)
-			c.Redirect(http.StatusFound, redirectUri)
+		if _, fk := codes[token.Code]; !fk {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
 			return
 		} else {
+			delete(codes, token.Code)
+		}
 
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid creds."})
+		authHeader := c.GetHeader("Authorization")
+		clientId, secret := auth.GetCreds(authHeader)
+		client, err := db.GetClient(clients, clientId)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
+			return
+		}
+
+		if client.ClientSecret != secret {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
+			return
+		}
+
+		if client.RedirectURI != token.RedirectUri {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
+			return
+		}
+
+		if token.GrantType == "authorization_code" {
+			token := auth.GenerateJWT(
+				auth.Header{Alg: "SHA256", Typ: "JWT"},
+				auth.Payload{Username: "test_user", Exp: 123123123},
+				"test",
+			)
+			c.JSON(http.StatusOK, gin.H{"token": token})
+			return
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grand type."})
 			return
 		}
 

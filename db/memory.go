@@ -6,6 +6,7 @@ type Client struct {
 	ClientId     string
 	ClientSecret string
 	RedirectURI  string
+	State        string
 }
 
 type CodeClient struct {
