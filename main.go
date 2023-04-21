@@ -28,10 +28,10 @@ func randStringRunes(n int) string {
 }
 
 type TokenIn struct {
-	Code         string `json:"code"`
-	GrantType    string `json:"grant_type"`
-	RedirectUri  string `json:"redirect_uri"`
-	CodeVerifier string `json:"code_verifier"`
+	Code         string `form:"code"`
+	GrantType    string `form:"grant_type"`
+	RedirectUri  string `form:"redirect_uri"`
+	CodeVerifier string `form:"code_verifier"`
 }
 
 type LoginIn struct {
