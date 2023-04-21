@@ -12,6 +12,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -95,6 +96,10 @@ func main() {
 			return
 		}
 
+		loginFormIn.RedirectUri, _ = url.QueryUnescape(loginFormIn.RedirectUri)
+		loginFormIn.ClientId, _ = url.QueryUnescape(loginFormIn.ClientId)
+		loginFormIn.State, _ = url.QueryUnescape(loginFormIn.State)
+		loginFormIn.CodeChallenge, _ = url.QueryUnescape(loginFormIn.CodeChallenge)
 		client, err := db.GetClient(clients, loginFormIn.ClientId)
 
 		if err != nil {
@@ -224,7 +229,7 @@ func main() {
 			tokenJWT := auth.GenerateJWT(
 				auth.Header{Alg: "SHA256", Typ: "JWT"},
 				auth.Payload{Username: "test_user", Exp: 123123123},
-				"test",
+				"test2",
 			)
 			c.JSON(http.StatusOK, gin.H{"token": tokenJWT})
 			return
