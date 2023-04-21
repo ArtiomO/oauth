@@ -1,7 +1,7 @@
-package auth
+package encdec
 
 import (
-	b64 "encoding/base64"
+	"encoding/base64"
 	"fmt"
 	"strings"
 )
@@ -9,7 +9,7 @@ import (
 func decodeB64(str string) string {
 
 	encodedCreds := strings.Split(str, " ")[1]
-	rawDecodedText, err := b64.StdEncoding.DecodeString(encodedCreds)
+	rawDecodedText, err := base64.StdEncoding.DecodeString(encodedCreds)
 	if err != nil {
 		panic(err)
 	}

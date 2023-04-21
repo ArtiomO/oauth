@@ -1,12 +1,10 @@
 package auth
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
 	b64 "encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/ArtiomO/oauth/encdec"
 )
 
 type Header struct {
@@ -43,13 +41,6 @@ func encodeToB64(str string) string {
 	return b64.StdEncoding.EncodeToString([]byte(str))
 }
 
-func sha256Sum(str string, secret string) string {
-	h := hmac.New(sha256.New, []byte(secret))
-	h.Write([]byte(str))
-	sha := hex.EncodeToString(h.Sum(nil))
-	return sha
-}
-
 func structToString(stringer Stringer) string {
 	return stringer.String()
 }
@@ -58,6 +49,6 @@ func GenerateJWT(h Header, p Payload, secret string) string {
 	headerEncoded := encodeToB64(structToString(h))
 	payloadEncoded := encodeToB64(structToString(p))
 	payloadWithHeader := fmt.Sprintf("%s.%s", headerEncoded, payloadEncoded)
-	shaSum := sha256Sum(payloadWithHeader, secret)
+	shaSum := encdec.Sha256SumHmacHex(payloadWithHeader, secret)
 	return fmt.Sprintf("%s.%s.%s", headerEncoded, payloadEncoded, shaSum)
 }

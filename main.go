@@ -1,21 +1,22 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/ArtiomO/oauth/auth"
 	"github.com/ArtiomO/oauth/db"
+	"github.com/ArtiomO/oauth/encdec"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"time"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var redisExpiration = time.Duration(time.Duration.Seconds(5))
+var redisExpiration = time.Duration(time.Duration.Seconds(60))
 
 func randStringRunes(n int) string {
 	b := make([]rune, n)
@@ -26,9 +27,10 @@ func randStringRunes(n int) string {
 }
 
 type TokenIn struct {
-	Code        string `json:"code"`
-	GrantType   string `json:"grant_type"`
-	RedirectUri string `json:"redirect_uri"`
+	Code         string `json:"code"`
+	GrantType    string `json:"grant_type"`
+	RedirectUri  string `json:"redirect_uri"`
+	CodeVerifier string `json:"code_verifier"`
 }
 
 type LoginIn struct {
@@ -38,21 +40,32 @@ type LoginIn struct {
 }
 
 type LoginFormIn struct {
-	ClientId    string `form:"client_id"`
-	RedirectUri string `form:"redirect_uri"`
-	State       string `form:"state"`
+	ClientId            string `form:"client_id"`
+	RedirectUri         string `form:"redirect_uri"`
+	State               string `form:"state"`
+	CodeChallenge       string `form:"code_challenge"`
+	CodeChallengeMethod string `form:"code_challenge_method"`
 }
 
-type AuthorizeIn struct {
-	ResponseType string `form:"response_type"`
-	CliendId     string `form:"client_id"`
-	RedirectUri  string `form:"redirect_uri"`
-	State        string `form:"state"`
+func (c LoginFormIn) String() string {
+	out, err := json.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+
+func LoginInFromString(s string) LoginFormIn {
+	var loginFormReg LoginFormIn
+	err := json.Unmarshal([]byte(s), &loginFormReg)
+	if err != nil {
+		panic(err)
+	}
+	return loginFormReg
 }
 
 func main() {
 
-	requestsContext := db.Requests{}
 	clients := []db.Client{{
 		ClientId:     "test-client-id",
 		ClientSecret: "test-client-secret",
@@ -71,35 +84,6 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	r.GET("/api/v1/authorize", func(c *gin.Context) {
-
-		var authIn AuthorizeIn
-
-		if c.ShouldBind(&authIn) != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request."})
-			return
-		}
-		client, err := db.GetClient(clients, authIn.CliendId)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		if client.RedirectURI != authIn.RedirectUri {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid redirect URI, incident reported."})
-			return
-		}
-		if authIn.ResponseType == "code" {
-			code := randStringRunes(8)
-			err := rdb.Set(c.Request.Context(), fmt.Sprintf("oauth_code_%s", code), "", redisExpiration).Err()
-			if err != nil {
-				panic(err)
-			}
-			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback?code=%s&state=%s", code, authIn.State)
-			c.Redirect(http.StatusFound, redirect)
-			return
-		}
-
-	})
 	r.GET("/api/v1/login", func(c *gin.Context) {
 
 		var loginFormIn LoginFormIn
@@ -111,12 +95,24 @@ func main() {
 			return
 		}
 
-		requestsContext[reqId] = db.Client{
-			ClientId:    loginFormIn.ClientId,
-			RedirectURI: loginFormIn.RedirectUri,
-			State:       loginFormIn.State,
+		client, err := db.GetClient(clients, loginFormIn.ClientId)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown client."})
+			return
 		}
 
+		if client.RedirectURI != loginFormIn.RedirectUri {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid redirect URI."})
+			return
+		}
+
+		rdsKey := fmt.Sprintf("oauth_request_%s", reqId)
+
+		err = rdb.Set(c.Request.Context(), rdsKey, loginFormIn.String(), redisExpiration).Err()
+		if err != nil {
+			panic(err)
+		}
 		c.HTML(http.StatusOK, "login.tmpl", gin.H{"requestId": reqId})
 		return
 	})
@@ -130,25 +126,39 @@ func main() {
 			return
 		}
 
-		clientent, found := requestsContext[loginIn.ReqId]
+		rdsKeyReq := fmt.Sprintf("oauth_request_%s", loginIn.ReqId)
+		requestStr, err := rdb.Get(c.Request.Context(), rdsKeyReq).Result()
 
-		if !found {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "No auth request."})
+		if err == redis.Nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Request."})
 			return
+		} else if err != nil {
+			panic(err)
 		}
 
+		loginInReq := LoginInFromString(requestStr)
+
 		if loginIn.Login == "vasya" || loginIn.Password == "123" {
-			redirectUri := fmt.Sprintf("http://localhost:8090/api/v1/authorize?client_id=%s&response_type=code&redirect_uri=%s&state=%s",
-				url.QueryEscape(clientent.ClientId),
-				url.QueryEscape(clientent.RedirectURI),
-				url.QueryEscape(clientent.State),
-			)
-			c.Redirect(http.StatusFound, redirectUri)
-			delete(requestsContext, loginIn.ReqId)
+
+			_, err := db.GetClient(clients, loginInReq.ClientId)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+				return
+			}
+
+			code := randStringRunes(8)
+			rdsKeyCode := fmt.Sprintf("oauth_code_%s", code)
+			err = rdb.Set(c.Request.Context(), rdsKeyCode, requestStr, redisExpiration).Err()
+			if err != nil {
+				panic(err)
+			}
+			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback?code=%s&state=%s", code, loginInReq.State)
+			c.Redirect(http.StatusFound, redirect)
+			rdb.Del(c.Request.Context(), rdsKeyReq)
 			return
 		} else {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid creds."})
-			delete(requestsContext, loginIn.ReqId)
+			rdb.Del(c.Request.Context(), rdsKeyReq)
 			return
 		}
 
@@ -156,26 +166,34 @@ func main() {
 
 	r.POST("/api/v1/token", func(c *gin.Context) {
 
-		var token TokenIn
+		var tokenIn TokenIn
 
-		if c.ShouldBind(&token) != nil {
+		if c.ShouldBind(&tokenIn) != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Bad request."})
 			return
 		}
 
-		_, err := rdb.Get(c.Request.Context(), fmt.Sprintf("oauth_code_%s", token.Code)).Result()
-		if err != nil {
+		rdsKey := fmt.Sprintf("oauth_code_%s", tokenIn.Code)
+
+		clientStr, err := rdb.Get(c.Request.Context(), rdsKey).Result()
+
+		if err == redis.Nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
 			return
+		} else if err != nil {
+			panic(err)
 		}
-		rdb.Del(c.Request.Context(), fmt.Sprintf("oauth_code_%s", token.Code))
+
+		rdb.Del(c.Request.Context(), rdsKey)
+
+		storedCodeReq := LoginInFromString(clientStr)
 
 		authHeader := c.GetHeader("Authorization")
-		clientId, secret := auth.GetCreds(authHeader)
+		clientId, secret := encdec.GetCreds(authHeader)
 		client, err := db.GetClient(clients, clientId)
 
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown client."})
 			return
 		}
 
@@ -184,18 +202,31 @@ func main() {
 			return
 		}
 
-		if client.RedirectURI != token.RedirectUri {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
-			return
-		}
+		if tokenIn.GrantType == "authorization_code" {
 
-		if token.GrantType == "authorization_code" {
-			token := auth.GenerateJWT(
+			if tokenIn.RedirectUri != storedCodeReq.RedirectUri {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
+				return
+			}
+
+			if clientId != storedCodeReq.ClientId {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
+				return
+			}
+
+			calculatedChallenge := encdec.Sha256SumB64(tokenIn.CodeVerifier)
+
+			if calculatedChallenge != storedCodeReq.CodeChallenge {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request."})
+				return
+			}
+
+			tokenJWT := auth.GenerateJWT(
 				auth.Header{Alg: "SHA256", Typ: "JWT"},
 				auth.Payload{Username: "test_user", Exp: 123123123},
 				"test",
 			)
-			c.JSON(http.StatusOK, gin.H{"token": token})
+			c.JSON(http.StatusOK, gin.H{"token": tokenJWT})
 			return
 		} else {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grand type."})

@@ -1,12 +1,38 @@
 package db
 
-import "errors"
+import (
+	"encoding/json"
+	"errors"
+)
 
 type Client struct {
 	ClientId     string
 	ClientSecret string
 	RedirectURI  string
-	State        string
+}
+
+type ClientRequest struct {
+	RedirectURI         string
+	State               string
+	ClientId            string
+	CodeChallenge       string
+	CodeChallengeMethod string
+}
+
+func (c ClientRequest) String() string {
+	out, err := json.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
+}
+
+func (c Client) String() string {
+	out, err := json.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return string(out)
 }
 
 type CodeClient struct {
