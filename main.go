@@ -17,7 +17,7 @@ import (
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-var redisExpiration = time.Duration(time.Duration.Seconds(60))
+var redisExpiration = time.Duration(time.Duration.Seconds(300))
 
 func randStringRunes(n int) string {
 	b := make([]rune, n)
@@ -35,7 +35,7 @@ type TokenIn struct {
 }
 
 type LoginIn struct {
-	Login    string `form:"login"`
+	Email    string `form:"email"`
 	Password string `form:"password"`
 	ReqId    string `form:"reqid"`
 }
@@ -78,6 +78,7 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	r.Use(cors.New(config))
+	r.Static("/static", "./static/")
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
@@ -143,7 +144,7 @@ func main() {
 
 		loginInReq := LoginInFromString(requestStr)
 
-		if loginIn.Login == "vasya" || loginIn.Password == "123" {
+		if loginIn.Email == "vasya@vasya.com" || loginIn.Password == "123" {
 
 			_, err := db.GetClient(clients, loginInReq.ClientId)
 			if err != nil {
@@ -240,7 +241,7 @@ func main() {
 
 	})
 
-	if err := r.Run(":8090"); err != nil {
+	if err := r.Run("0.0.0.0:8090"); err != nil {
 		log.Printf("Error: %v", err)
 	}
 }

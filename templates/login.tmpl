@@ -1,143 +1,46 @@
 <html>
+
 <head>
-
-  <meta charset="UTF-8">
-  <title>Login</title>
-  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Rubik:400,700'><link rel="stylesheet" href="./style.css">
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-font-smoothing: antialiased;
-}
-
-body {
-  background: #e35869;
-  font-family: 'Rubik', sans-serif;
-}
-
-.login-form {
-  background: #fff;
-  width: 500px;
-  margin: 65px auto;
-  display: -webkit-box;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-          flex-direction: column;
-  border-radius: 4px;
-  box-shadow: 0 2px 25px rgba(0, 0, 0, 0.2);
-}
-.login-form h1 {
-  padding: 35px 35px 0 35px;
-  font-weight: 300;
-}
-.login-form .content {
-  padding: 35px;
-  text-align: center;
-}
-.login-form .input-field {
-  padding: 12px 5px;
-}
-.login-form .input-field input {
-  font-size: 16px;
-  display: block;
-  font-family: 'Rubik', sans-serif;
-  width: 100%;
-  padding: 10px 1px;
-  border: 0;
-  border-bottom: 1px solid #747474;
-  outline: none;
-  -webkit-transition: all .2s;
-  transition: all .2s;
-}
-.login-form .input-field input::-webkit-input-placeholder {
-  text-transform: uppercase;
-}
-.login-form .input-field input::-moz-placeholder {
-  text-transform: uppercase;
-}
-.login-form .input-field input:-ms-input-placeholder {
-  text-transform: uppercase;
-}
-.login-form .input-field input::-ms-input-placeholder {
-  text-transform: uppercase;
-}
-.login-form .input-field input::placeholder {
-  text-transform: uppercase;
-}
-.login-form .input-field input:focus {
-  border-color: #222;
-}
-.login-form a.link {
-  text-decoration: none;
-  color: #747474;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-  display: inline-block;
-  margin-top: 20px;
-}
-.login-form .action {
-  display: -webkit-box;
-  display: flex;
-  -webkit-box-orient: horizontal;
-  -webkit-box-direction: normal;
-          flex-direction: row;
-}
-.login-form .action button {
-  width: 100%;
-  border: none;
-  padding: 18px;
-  font-family: 'Rubik', sans-serif;
-  cursor: pointer;
-  text-transform: uppercase;
-  background: #e8e9ec;
-  color: #777;
-  border-bottom-left-radius: 4px;
-  border-bottom-right-radius: 0;
-  letter-spacing: 0.2px;
-  outline: 0;
-  -webkit-transition: all .3s;
-  transition: all .3s;
-}
-.login-form .action button:hover {
-  background: #d8d8d8;
-}
-.login-form .action button:nth-child(2) {
-  background: #2d3b55;
-  color: #fff;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 4px;
-}
-.login-form .action button:nth-child(2):hover {
-  background: #3c4d6d;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/out.css">
 </head>
+
 <body>
-
-
-<div class="login-form">
-<form  method="post" action="/api/v1/login" autocomplete="off">
-<input type="hidden" value={{ .requestId }} name="reqid">
-<input autocomplete="false" name="hidden" type="text" style="display:none;">
-<h1>Login</h1>
-<div class="content">
-<div class="input-field">
-    <input type="text" id="name" name="login" placeholder="User name" autoComplete="new-password">
-</div>
-<div class="input-field">
-    <input type="password" id="password" name="password" placeholder="Password" autoComplete="new-password">
-</div>
-</div>
-
-<div class="action">
-    <button type="submit">Login</button>
-</div>
-</form>
-</div>
+    <section class="bg-gray-50 dark:bg-gray-900">
+        <div class="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+            <a href="#" class="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
+                <img class="w-12 h-12 mr-2" src="/static/disco.svg" alt="logo">
+                Disco !!!
+            </a>
+            <div class="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+                <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
+                    <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+                        Sign in to your account
+                    </h1>
+                    <form class="space-y-4 md:space-y-6" action="/api/v1/login" method="post">
+                    <input type="hidden" value={{ .requestId }} name="reqid">
+                        <div>
+                            <label for="email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+                            <input type="email" name="email" id="email" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="your@email.com" required="">
+                        </div>
+                        <div>
+                            <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+                            <input type="password" name="password" id="password" placeholder="••••••••" class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required="">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <a href="#" class="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">Forgot password?</a>
+                        </div>
+                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Sign in</button>
+                        <p class="text-sm font-light text-gray-500 dark:text-gray-400">
+                            Don’t have an account yet? <a href="#" class="font-medium text-primary-600 hover:underline dark:text-primary-500">Sign up</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+      </section>
 
 </body>
+
 </html>
