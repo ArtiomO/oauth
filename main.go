@@ -70,18 +70,18 @@ func main() {
 	clients := []db.Client{{
 		ClientId:     "test-client-id",
 		ClientSecret: "test-client-secret",
-		RedirectURI:  "http://localhost:3000/api/oauthcallback",
+		RedirectURI:  "http://rssscraperweb:3000/api/oauthcallback",
 	}}
 
 	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
+	r.LoadHTMLGlob("./templates/*")
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	r.Use(cors.New(config))
 	r.Static("/static", "./static/")
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     "redis:6379",
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
