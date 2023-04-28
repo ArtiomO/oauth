@@ -7,8 +7,8 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"time"
 	"os"
+	"time"
 
 	"github.com/ArtiomO/oauth/auth"
 	"github.com/ArtiomO/oauth/db"
@@ -72,7 +72,7 @@ func main() {
 	clients := []db.Client{{
 		ClientId:     "test-client-id",
 		ClientSecret: "test-client-secret",
-		RedirectURI:  "http://rssscraperweb:3000/api/oauthcallback",
+		RedirectURI:  "https://vertuhi.com/api/oauthcallback",
 	}}
 
 	r := gin.Default()
@@ -80,10 +80,12 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	r.Use(cors.New(config))
-	r.Static(os.Getenv("STATIC_URI"), "./static/")
+	r.Static(os.Getenv("STATIC_URI"), "./static")
+
+	redisHost := os.Getenv("REDIS_HOST")
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "redis:6379",
+		Addr:     redisHost,
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
@@ -121,7 +123,7 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		c.HTML(http.StatusOK, "login.tmpl", gin.H{"requestId": reqId})
+		c.HTML(http.StatusOK, "login.tmpl", gin.H{"requestId": reqId, "staticUri": os.Getenv("STATIC_URI")})
 		return
 	})
 
@@ -160,7 +162,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			redirect := fmt.Sprintf("http://localhost:3000/api/oauthcallback?code=%s&state=%s", code, loginInReq.State)
+			redirect := fmt.Sprintf("https://vertuhi.com/api/oauthcallback?code=%s&state=%s", code, loginInReq.State)
 			c.Redirect(http.StatusFound, redirect)
 			rdb.Del(c.Request.Context(), rdsKeyReq)
 			return
