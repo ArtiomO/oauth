@@ -3,17 +3,19 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"math/rand"
+	"net/http"
+	"net/url"
+	"time"
+	"os"
+
 	"github.com/ArtiomO/oauth/auth"
 	"github.com/ArtiomO/oauth/db"
 	"github.com/ArtiomO/oauth/encdec"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-	"log"
-	"math/rand"
-	"net/http"
-	"net/url"
-	"time"
 )
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -78,7 +80,7 @@ func main() {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	r.Use(cors.New(config))
-	r.Static("/static", "./static/")
+	r.Static(os.Getenv("STATIC_URI"), "./static/")
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "redis:6379",

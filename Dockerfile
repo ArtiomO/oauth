@@ -26,6 +26,7 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /server /server
+COPY --from=builder /static /static
 COPY --from=builder /templates /templates
 ENV GIN_MODE release
 
