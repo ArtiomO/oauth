@@ -1,4 +1,4 @@
-package encdec
+package encode
 
 import (
 	"encoding/base64"

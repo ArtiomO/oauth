@@ -1,10 +1,9 @@
-package auth
+package encode
 
 import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/ArtiomO/oauth/encdec"
 )
 
 type Header struct {
@@ -49,6 +48,6 @@ func GenerateJWT(h Header, p Payload, secret string) string {
 	headerEncoded := encodeToB64(structToString(h))
 	payloadEncoded := encodeToB64(structToString(p))
 	payloadWithHeader := fmt.Sprintf("%s.%s", headerEncoded, payloadEncoded)
-	shaSum := encdec.Sha256SumHmacHex(payloadWithHeader, secret)
+	shaSum := Sha256SumHmacHex(payloadWithHeader, secret)
 	return fmt.Sprintf("%s.%s.%s", headerEncoded, payloadEncoded, shaSum)
 }

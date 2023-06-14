@@ -1,4 +1,4 @@
-package encdec
+package encode
 
 import (
 	"crypto/hmac"
@@ -13,7 +13,7 @@ func Sha256SumHmacHex(str string, secret string) string {
 	return sha
 }
 
-func Sha256SumB64(str string) string {
+func Sha256SumHex(str string) string {
 	h := sha256.New()
 	h.Write([]byte(str))
 	sha := hex.EncodeToString(h.Sum(nil))
