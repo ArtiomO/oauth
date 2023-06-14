@@ -66,12 +66,7 @@ func (s *Server) PostTokenHandler(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request."})
 			return
 		}
-
-		tokenJWT := encode.GenerateJWT(
-			encode.Header{Alg: "SHA256", Typ: "JWT"},
-			encode.Payload{Username: "test_user", Exp: 123123123},
-			"test2",
-		)
+		tokenJWT := encode.GenerateJWT("test_user")
 		c.JSON(http.StatusOK, gin.H{"token": tokenJWT})
 		return
 	} else {

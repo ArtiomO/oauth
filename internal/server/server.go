@@ -1,33 +1,17 @@
 package server
 
 import (
-	"context"
-	"fmt"
 	"os"
 
 	"github.com/ArtiomO/oauth/internal/repository"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5"
 )
 
 type Server struct {
-	DB      *pgx.Conn
 	Gin     *gin.Engine
 	Clients repository.ClientsRepository
 	Cache   repository.CacheRepository
-}
-
-func (s *Server) InitDb() *Server {
-
-	db, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
-	}
-
-	s.DB = db
-	return s
 }
 
 func (s *Server) InitCache() *Server {
@@ -55,8 +39,4 @@ func (s *Server) InitClients() *Server {
 	clientsRepo := &repository.MemoryClientRepository{}
 	s.Clients = clientsRepo.InitClientRepo()
 	return s
-}
-
-func (s *Server) Ready() bool {
-	return s.DB != nil && s.Gin != nil
 }

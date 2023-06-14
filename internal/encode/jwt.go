@@ -6,21 +6,17 @@ import (
 	"fmt"
 )
 
-type Header struct {
+type header struct {
 	Alg string
 	Typ string
 }
 
-type Payload struct {
+type payload struct {
 	Username string
 	Exp      int
 }
 
-type Stringer interface {
-	String() string
-}
-
-func (c Payload) String() string {
+func (c payload) String() string {
 	out, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
@@ -28,7 +24,7 @@ func (c Payload) String() string {
 	return string(out)
 }
 
-func (c Header) String() string {
+func (c header) String() string {
 	out, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
@@ -40,14 +36,27 @@ func encodeToB64(str string) string {
 	return b64.StdEncoding.EncodeToString([]byte(str))
 }
 
-func structToString(stringer Stringer) string {
+func structToString(stringer fmt.Stringer) string {
 	return stringer.String()
 }
 
-func GenerateJWT(h Header, p Payload, secret string) string {
-	headerEncoded := encodeToB64(structToString(h))
-	payloadEncoded := encodeToB64(structToString(p))
+func headerFactory(alg, typ string) header {
+	return header{Alg: alg, Typ: typ}
+}
+
+func payloadFactory(username string, exp int) payload {
+	return payload{Username: username, Exp: exp}
+}
+
+func GenerateJWT(username string) string {
+
+	header := headerFactory("SHA256", "JWT")
+	payload := payloadFactory(username, 123123123)
+	pay1 := structToString(header)
+	pay2 := structToString(payload)
+	headerEncoded := encodeToB64(pay1)
+	payloadEncoded := encodeToB64(pay2)
 	payloadWithHeader := fmt.Sprintf("%s.%s", headerEncoded, payloadEncoded)
-	shaSum := Sha256SumHmacHex(payloadWithHeader, secret)
+	shaSum := Sha256SumHmacHex(payloadWithHeader, "test2")
 	return fmt.Sprintf("%s.%s.%s", headerEncoded, payloadEncoded, shaSum)
 }
