@@ -5,6 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"os"
 	"time"
+	"log"
 )
 
 type RedisCacheRepository struct {
@@ -21,6 +22,19 @@ func (r *RedisCacheRepository) InitRedisRepo() *RedisCacheRepository {
 	})
 	r.redis = rdb
 	return r
+}
+
+func (r RedisCacheRepository) Disconnect() (bool, error) {
+
+	err := r.redis.Close()
+
+	log.Printf("Disconnecting redis.")
+
+	if err != nil {
+		return false ,err
+	}
+
+	return true, nil
 }
 
 func (r RedisCacheRepository) SetCacheKey(ctx context.Context, key string, value string, expiration time.Duration) (bool, error) {
