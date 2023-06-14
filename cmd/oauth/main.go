@@ -17,7 +17,6 @@ func main() {
 	srv.SetupRouter()
 
 	go func() {
-		// service connections
 		if err := srv.Gin.Run("0.0.0.0:8090"); err != nil {
 			log.Printf("Error: %v", err)
 		}
