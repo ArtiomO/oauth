@@ -9,7 +9,6 @@ import (
 	"github.com/ArtiomO/oauth/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
-
 )
 
 func (s *Server) PostTokenHandler(c *gin.Context) {

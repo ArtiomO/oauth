@@ -21,7 +21,7 @@ func LoginInFromString(s string) LoginFormIn {
 	return loginFormReg
 }
 
-func (c* LoginFormIn) String() string {
+func (c *LoginFormIn) String() string {
 	out, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
@@ -34,4 +34,3 @@ type LoginIn struct {
 	Password string `form:"password"`
 	ReqId    string `form:"reqid"`
 }
-

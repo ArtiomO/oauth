@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/ArtiomO/oauth/internal/db"
-	"github.com/gin-gonic/gin"
 	"github.com/ArtiomO/oauth/internal/models"
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -62,7 +62,7 @@ func (s *Server) GetLoginHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "login.tmpl", gin.H{"requestId": reqId, "staticUri": os.Getenv("STATIC_URI")})
 }
 
-func(s *Server) PostLoginHandler (c *gin.Context) {
+func (s *Server) PostLoginHandler(c *gin.Context) {
 
 	var loginIn models.LoginIn
 
@@ -93,8 +93,8 @@ func(s *Server) PostLoginHandler (c *gin.Context) {
 
 		code := randStringRunes(8)
 		keyCode := fmt.Sprintf("oauth_code_%s", code)
-		ok, err  := s.Cache.SetCacheKey(c.Request.Context(), keyCode, requestStr, cacheExpiration)
-		if !ok  {
+		ok, err := s.Cache.SetCacheKey(c.Request.Context(), keyCode, requestStr, cacheExpiration)
+		if !ok {
 			panic(err)
 		}
 		redirect := fmt.Sprintf("https://vertuhi.com/api/oauthcallback?code=%s&state=%s", code, loginInReq.State)

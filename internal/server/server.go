@@ -38,7 +38,6 @@ func (s *Server) InitCache() *Server {
 	return s
 }
 
-
 func (s *Server) InitGin() *Server {
 
 	r := gin.Default()
