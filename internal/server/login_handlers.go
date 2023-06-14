@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/ArtiomO/oauth/internal/db"
 	"github.com/ArtiomO/oauth/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -40,7 +39,7 @@ func (s *Server) GetLoginHandler(c *gin.Context) {
 	loginFormIn.ClientId, _ = url.QueryUnescape(loginFormIn.ClientId)
 	loginFormIn.State, _ = url.QueryUnescape(loginFormIn.State)
 	loginFormIn.CodeChallenge, _ = url.QueryUnescape(loginFormIn.CodeChallenge)
-	client, err := db.GetClient(*s.Clients, loginFormIn.ClientId)
+	client, err := s.Clients.GetClient(loginFormIn.ClientId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown client."})
@@ -85,7 +84,7 @@ func (s *Server) PostLoginHandler(c *gin.Context) {
 
 	if loginIn.Email == "vasya@vasya.com" || loginIn.Password == "123" {
 
-		_, err := db.GetClient(*s.Clients, loginInReq.ClientId)
+		_, err := s.Clients.GetClient(loginInReq.ClientId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ArtiomO/oauth/internal/db"
 	"github.com/ArtiomO/oauth/internal/encode"
 	"github.com/ArtiomO/oauth/internal/models"
 	"github.com/gin-gonic/gin"
@@ -37,7 +36,7 @@ func (s *Server) PostTokenHandler(c *gin.Context) {
 
 	authHeader := c.GetHeader("Authorization")
 	clientId, secret := encode.GetCreds(authHeader)
-	client, err := db.GetClient(*s.Clients, clientId)
+	client, err := s.Clients.GetClient(clientId)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown client."})

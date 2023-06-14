@@ -8,7 +8,7 @@ import (
 )
 
 type RedisCacheRepository struct {
-	Redis *redis.Client
+	redis *redis.Client
 }
 
 func (r *RedisCacheRepository) InitRedisRepo() *RedisCacheRepository {
@@ -19,13 +19,13 @@ func (r *RedisCacheRepository) InitRedisRepo() *RedisCacheRepository {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
-	r.Redis = rdb
+	r.redis = rdb
 	return r
 }
 
 func (r RedisCacheRepository) SetCacheKey(ctx context.Context, key string, value string, expiration time.Duration) (bool, error) {
 
-	err := r.Redis.Set(ctx, key, value, expiration).Err()
+	err := r.redis.Set(ctx, key, value, expiration).Err()
 
 	if err != nil {
 		return false, err
@@ -36,7 +36,7 @@ func (r RedisCacheRepository) SetCacheKey(ctx context.Context, key string, value
 
 func (r RedisCacheRepository) GetCacheKey(ctx context.Context, key string) (string, error) {
 
-	result, err := r.Redis.Get(ctx, key).Result()
+	result, err := r.redis.Get(ctx, key).Result()
 
 	if err != nil {
 		return "", err
@@ -47,7 +47,7 @@ func (r RedisCacheRepository) GetCacheKey(ctx context.Context, key string) (stri
 
 func (r RedisCacheRepository) DelCacheKey(ctx context.Context, key string) (int64, error) {
 
-	result, err := r.Redis.Del(ctx, key).Result()
+	result, err := r.redis.Del(ctx, key).Result()
 
 	if err != nil {
 		return result, err

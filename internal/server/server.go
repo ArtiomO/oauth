@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ArtiomO/oauth/internal/db"
 	"github.com/ArtiomO/oauth/internal/repository"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -15,7 +14,7 @@ import (
 type Server struct {
 	DB      *pgx.Conn
 	Gin     *gin.Engine
-	Clients *[]db.Client
+	Clients repository.ClientsRepository
 	Cache   repository.CacheRepository
 }
 
@@ -53,12 +52,8 @@ func (s *Server) InitGin() *Server {
 
 func (s *Server) InitClients() *Server {
 
-	clients := []db.Client{{
-		ClientId:     "test-client-id",
-		ClientSecret: "test-client-secret",
-		RedirectURI:  "https://vertuhi.com/api/oauthcallback",
-	}}
-	s.Clients = &clients
+	clientsRepo := &repository.MemoryClientRepository{}
+	s.Clients = clientsRepo.InitClientRepo()
 	return s
 }
 
