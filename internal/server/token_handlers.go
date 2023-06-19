@@ -1,13 +1,14 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/ArtiomO/oauth/internal/encode"
 	"github.com/ArtiomO/oauth/internal/models"
+	"github.com/ArtiomO/oauth/internal/repository"
 	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 )
 
 func (s *Server) PostTokenHandler(c *gin.Context) {
@@ -23,11 +24,9 @@ func (s *Server) PostTokenHandler(c *gin.Context) {
 
 	clientStr, err := s.Cache.GetCacheKey(c.Request.Context(), rdsKey)
 
-	if err == redis.Nil {
+	if errors.Is(err, repository.ErrKeyDoesntExists) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid grant."})
 		return
-	} else if err != nil {
-		panic(err)
 	}
 
 	s.Cache.DelCacheKey(c.Request.Context(), rdsKey)
@@ -38,7 +37,7 @@ func (s *Server) PostTokenHandler(c *gin.Context) {
 	clientId, secret := encode.GetCreds(authHeader)
 	client, err := s.Clients.GetClient(clientId)
 
-	if err != nil {
+	if errors.Is(err, repository.ErrClientDoesntExists) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown client."})
 		return
 	}

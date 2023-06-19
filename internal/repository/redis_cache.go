@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/redis/go-redis/v9"
+	"log"
 	"os"
 	"time"
-	"log"
 )
 
 type RedisCacheRepository struct {
@@ -31,7 +32,7 @@ func (r RedisCacheRepository) Disconnect() (bool, error) {
 	log.Printf("Disconnecting redis.")
 
 	if err != nil {
-		return false ,err
+		return false, err
 	}
 
 	return true, nil
@@ -52,8 +53,8 @@ func (r RedisCacheRepository) GetCacheKey(ctx context.Context, key string) (stri
 
 	result, err := r.redis.Get(ctx, key).Result()
 
-	if err != nil {
-		return "", err
+	if errors.Is(err, redis.Nil) {
+		return "", ErrKeyDoesntExists
 	}
 
 	return result, nil
@@ -63,8 +64,8 @@ func (r RedisCacheRepository) DelCacheKey(ctx context.Context, key string) (int6
 
 	result, err := r.redis.Del(ctx, key).Result()
 
-	if err != nil {
-		return result, err
+	if errors.Is(err, redis.Nil) {
+		return 0, ErrKeyDoesntExists
 	}
 
 	return result, nil

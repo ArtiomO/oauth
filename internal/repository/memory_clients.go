@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"github.com/ArtiomO/oauth/internal/models"
 	"sync"
 )
@@ -33,7 +32,7 @@ func (r MemoryClientRepository) GetClient(clientId string) (*models.Client, erro
 	client, ok := r.clients[clientId]
 
 	if !ok {
-		return nil, errors.New("no such client")
+		return nil, ErrClientDoesntExists
 	}
 
 	return &client, nil

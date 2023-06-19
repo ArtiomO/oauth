@@ -21,7 +21,7 @@ func main() {
 			log.Printf("Error: %v", err)
 		}
 	}()
-	
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit

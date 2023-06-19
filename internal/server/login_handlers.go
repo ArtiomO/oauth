@@ -1,6 +1,7 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ArtiomO/oauth/internal/models"
+	"github.com/ArtiomO/oauth/internal/repository"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 )
@@ -41,7 +43,7 @@ func (s *Server) GetLoginHandler(c *gin.Context) {
 	loginFormIn.CodeChallenge, _ = url.QueryUnescape(loginFormIn.CodeChallenge)
 	client, err := s.Clients.GetClient(loginFormIn.ClientId)
 
-	if err != nil {
+	if errors.Is(err, repository.ErrClientDoesntExists) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Unknown client."})
 		return
 	}
