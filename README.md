@@ -12,7 +12,7 @@
 
 # Docker
 
-Server listening on port 5000 inside container.
+Server listening on port 8090 inside container.
 
 Build:
 
