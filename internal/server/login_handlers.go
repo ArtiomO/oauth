@@ -109,7 +109,7 @@ func (s *Server) PostLoginHandler(c *gin.Context) {
 		if !ok {
 			panic(err)
 		}
-		redirect := fmt.Sprintf("https://vertuhi.com/api/oauthcallback?code=%s&state=%s", code, loginInReq.State)
+		redirect := fmt.Sprintf("https://localhost:3000/api/oauthcallback?code=%s&state=%s", code, loginInReq.State)
 		c.Redirect(http.StatusFound, redirect)
 		s.Cache.DelCacheKey(c.Request.Context(), cacheKeyReq)
 		return
