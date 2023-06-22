@@ -16,7 +16,6 @@ type Server struct {
 
 func (s *Server) InitCache() *Server {
 
-
 	s.Cache = repository.InitRedisRepo()
 	return s
 }
@@ -36,7 +35,13 @@ func (s *Server) InitGin() *Server {
 
 func (s *Server) InitClients() *Server {
 
-
 	s.Clients = repository.InitClientRepo()
 	return s
+}
+
+func (s *Server) Shutdown() error {
+
+	_, err := s.Cache.Disconnect()
+
+	return err
 }
