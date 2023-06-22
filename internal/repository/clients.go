@@ -5,5 +5,5 @@ import (
 )
 
 type ClientsRepository interface {
-	GetClient(clientId string) (*models.Client, error)
+	GetClient(clientId string) (models.Client, error)
 }

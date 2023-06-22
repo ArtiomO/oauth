@@ -16,8 +16,8 @@ type Server struct {
 
 func (s *Server) InitCache() *Server {
 
-	cache := &repository.RedisCacheRepository{}
-	s.Cache = cache.InitRedisRepo()
+
+	s.Cache = repository.InitRedisRepo()
 	return s
 }
 
@@ -36,7 +36,7 @@ func (s *Server) InitGin() *Server {
 
 func (s *Server) InitClients() *Server {
 
-	clientsRepo := &repository.MemoryClientRepository{}
-	s.Clients = clientsRepo.InitClientRepo()
+
+	s.Clients = repository.InitClientRepo()
 	return s
 }

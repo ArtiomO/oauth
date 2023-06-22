@@ -10,7 +10,9 @@ type MemoryClientRepository struct {
 	lock    *sync.RWMutex
 }
 
-func (r MemoryClientRepository) InitClientRepo() *MemoryClientRepository {
+func InitClientRepo() *MemoryClientRepository {
+
+	r := MemoryClientRepository{}
 
 	clients := map[string]models.Client{
 		"test-client-id": {
@@ -24,7 +26,7 @@ func (r MemoryClientRepository) InitClientRepo() *MemoryClientRepository {
 	return &r
 }
 
-func (r MemoryClientRepository) GetClient(clientId string) (*models.Client, error) {
+func (r *MemoryClientRepository) GetClient(clientId string) (models.Client, error) {
 
 	r.lock.Lock()
 	defer r.lock.Unlock()
@@ -32,8 +34,8 @@ func (r MemoryClientRepository) GetClient(clientId string) (*models.Client, erro
 	client, ok := r.clients[clientId]
 
 	if !ok {
-		return nil, ErrClientDoesntExists
+		return models.Client{}, ErrClientDoesntExists
 	}
 
-	return &client, nil
+	return client, nil
 }
